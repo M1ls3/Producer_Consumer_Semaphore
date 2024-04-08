@@ -1,0 +1,22 @@
+[GENERATED OBJECT FILE]
+b__main.o
+[PROJECT FILES]
+C:\.adaProject\lab3\producer_consumerada.gpr
+20240407202500 8f1f998f0aa89a9b43b474fb655ea6c2
+[BOUND OBJECT FILES]
+C:\.adaProject\lab3\obj\main.o
+[GENERATED SOURCE FILES]
+b__main.ads
+b__main.adb
+b__main.ali
+[RESULTING OPTIONS]
+-LC:\.adaProject\lab3\obj\
+-LC:\.adaProject\lab3\obj\
+-LC:/gnat/data/lib/gcc/x86_64-w64-mingw32/10.3.1/adalib/
+-static
+-static-libgcc
+C:/gnat/data/lib/gcc/x86_64-w64-mingw32/10.3.1/adalib/libgnarl.a
+C:/gnat/data/lib/gcc/x86_64-w64-mingw32/10.3.1/adalib/libgnat.a
+-Xlinker
+--stack=0x200000,0x1000
+-mthreads

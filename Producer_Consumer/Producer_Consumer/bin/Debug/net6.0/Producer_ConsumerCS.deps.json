@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "Producer_ConsumerCS/1.0.0": {
+        "runtime": {
+          "Producer_ConsumerCS.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Producer_ConsumerCS/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
