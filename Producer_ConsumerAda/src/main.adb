@@ -1,154 +1,147 @@
-with Ada.Text_IO, GNAT.Semaphores;
-use Ada.Text_IO, GNAT.Semaphores;
-with Ada.Containers.Indefinite_Doubly_Linked_Lists; use Ada.Containers;
-with Ada.Numerics.Discrete_Random;
-with Ada.Characters.Latin_1;
-with Ada.Characters.Wide_Latin_1;
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_IO, GNAT.Semaphores;  -- Import Ada.Text_IO and GNAT.Semaphores packages.
+use Ada.Text_IO, GNAT.Semaphores;  -- Make the contents of Ada.Text_IO and GNAT.Semaphores directly visible.
+with Ada.Containers.Indefinite_Doubly_Linked_Lists; use Ada.Containers;  -- Import and make the contents of Ada.Containers.Indefinite_Doubly_Linked_Lists visible.
+with Ada.Numerics.Discrete_Random;  -- Import Ada.Numerics.Discrete_Random package for generating random numbers.
 
-pragma Wide_Character_Encoding (Utf8);
+pragma Wide_Character_Encoding (Utf8);  -- Set wide character encoding to UTF-8.
 
-procedure Main is
-   package String_Lists is new Indefinite_Doubly_Linked_Lists (String);
-   use String_Lists;
+procedure Main is  -- Start of the main procedure.
+   package String_Lists is new Indefinite_Doubly_Linked_Lists (String);  -- Define a new package String_Lists based on Indefinite_Doubly_Linked_Lists for strings.
+   use String_Lists;  -- Make the contents of String_Lists directly visible.
 
-   type RandRange is range 1 .. 100;
+   type RandRange is range 1 .. 100;  -- Define a range type for random numbers.
 
-   protected ItemsHandler is
-      procedure SetProduction (Total : in Integer);
-      procedure DecrementProduced;
-      procedure DecrementConsumed;
-      function IsProductionDone return Boolean;
-      function IsConsumptionDone return Boolean;
+   protected ItemsHandler is  -- Define a protected type ItemsHandler to handle items.
+      procedure SetProduction (Total : in Integer);  -- Procedure to set the total production.
+      procedure ProduceCount;  -- Procedure to decrement the produced items.
+      procedure ConsumeCount;  -- Procedure to decrement the consumed items.
+      function IsProductionDone return Boolean;  -- Function to check if production is done.
+      function IsConsumptionDone return Boolean;  -- Function to check if consumption is done.
    private
-      Left_Produced : Integer := 0;
-      Left_Consumed : Integer := 0;
+      Left_Produced : Integer := 0;  -- Counter for remaining produced items.
+      Left_Consumed : Integer := 0;  -- Counter for remaining consumed items.
    end ItemsHandler;
 
-   protected body ItemsHandler is
-      procedure SetProduction (Total : in Integer) is
+   protected body ItemsHandler is  -- Body of the protected type ItemsHandler.
+      procedure SetProduction (Total : in Integer) is  -- Implementation of SetProduction procedure.
       begin
-         Left_Produced := Total;
-         Left_Consumed := Total;
+         Left_Produced := Total;  -- Set the remaining produced items to the total.
+         Left_Consumed := Total;  -- Set the remaining consumed items to the total.
       end SetProduction;
 
-      procedure DecrementProduced is
+      procedure ProduceCount is  -- Implementation of DecrementProduced procedure.
       begin
-         if Left_Produced > 0 then
-            Left_Produced := Left_Produced - 1;
+         if Left_Produced > 0 then  -- Check if there are remaining produced items.
+            Left_Produced := Left_Produced - 1;  -- Decrement the counter for produced items.
          end if;
-      end DecrementProduced;
+      end ProduceCount;
 
-      procedure DecrementConsumed is
+      procedure ConsumeCount is  -- Implementation of DecrementConsumed procedure.
       begin
-         if Left_Consumed > 0 then
-            Left_Consumed := Left_Consumed - 1;
+         if Left_Consumed > 0 then  -- Check if there are remaining consumed items.
+            Left_Consumed := Left_Consumed - 1;  -- Decrement the counter for consumed items.
          end if;
-      end DecrementConsumed;
+      end ConsumeCount;
 
-      function IsProductionDone return Boolean is
+      function IsProductionDone return Boolean is  -- Implementation of IsProductionDone function.
       begin
-         return Left_Produced = 0;
+         return Left_Produced = 0;  -- Return True if all items are produced.
       end IsProductionDone;
 
-      function IsConsumptionDone return Boolean is
+      function IsConsumptionDone return Boolean is  -- Implementation of IsConsumptionDone function.
       begin
-         return Left_Consumed = 0;
+         return Left_Consumed = 0;  -- Return True if all items are consumed.
       end IsConsumptionDone;
 
    end ItemsHandler;
 
-   Storage_Size  : Integer := 3;
-   Num_Suppliers : Integer := 1;
-   Num_Receivers : Integer := 4;
-   Total_Items   : Integer := 10;
+   Storage_Size  : Integer := 3;  -- Define the size of the storage.
+   Num_Producers : Integer := 1;  -- Define the number of producers.
+   Num_Consumers : Integer := 4;  -- Define the number of consumers.
+   Total_Items   : Integer := 10;  -- Define the total number of items.
 
-   Storage        : List;
-   Access_Storage : Counting_Semaphore (1, Default_Ceiling);
-   Full_Storage   : Counting_Semaphore (Storage_Size, Default_Ceiling);
-   Empty_Storage  : Counting_Semaphore (0, Default_Ceiling);
+   Storage        : List;  -- Define a list to store items.
+   Access_Storage : Counting_Semaphore (1, Default_Ceiling);  -- Define a semaphore for accessing the storage.
+   Full_Storage   : Counting_Semaphore (Storage_Size, Default_Ceiling);  -- Define a semaphore for indicating full storage.
+   Empty_Storage  : Counting_Semaphore (0, Default_Ceiling);  -- Define a semaphore for indicating empty storage.
 
-  task type SupplierTask is
-      entry Start (Num : Integer);
-   end SupplierTask;
+  task type ProducerTask is  -- Define a task type for producers.
+      entry Start (Num : Integer);  -- Entry to start a producer task.
+   end ProducerTask;
 
-   task body SupplierTask is
-      package Rand_Int is new Ada.Numerics.Discrete_Random (RandRange);
-      use Rand_Int;
-      Supplier_Id   : Integer;
-      Rand_Generator : Generator;
-      Item_Value    : Integer;
+   task body ProducerTask is  -- Body of the producer task.
+      package Rand_Int is new Ada.Numerics.Discrete_Random (RandRange);  -- Define a random number generator package.
+      use Rand_Int;  -- Make the contents of the random number generator package directly visible.
+      Producer_Id   : Integer;  -- ID of the producer.
+      Rand_Generator : Generator;  -- Random number generator.
+      Item_Value    : Integer;  -- Value of the produced item.
    begin
-      accept Start (Num : Integer) do
-         Supplier_Id := Num;
+      accept Start (Num : Integer) do  -- Accept the start entry with a producer ID.
+         ProducerTask.Producer_Id := Num;  -- Set the producer ID.
       end Start;
-      Reset (Rand_Generator);
-      while not ItemsHandler.IsProductionDone loop
-         ItemsHandler.DecrementProduced;
-         Full_Storage.Seize;
-         Access_Storage.Seize;
+      Reset (Rand_Generator);  -- Reset the random number generator.
+      while not ItemsHandler.IsProductionDone loop  -- Continue producing until all items are produced.
+         ItemsHandler.ProduceCount;  -- Decrement the counter for produced items.
+         Full_Storage.Seize;  -- Acquire a full storage semaphore.
+         Access_Storage.Seize;  -- Acquire an access semaphore for storage.
 
-         Item_Value := Integer (Random (Rand_Generator));
-         Storage.Append ("item" & Item_Value'Img);
+         Item_Value := Integer (Random (Rand_Generator));  -- Generate a random item value.
+         Storage.Append ("item" & Item_Value'Img);  -- Append the item to the storage.
          Put_Line
-           (Ada.Characters.Latin_1.ESC & "[33m" & "Supplier #" & Supplier_Id'Img &
-            " adds item" & Item_Value'Img & Ada.Characters.Latin_1.ESC & "[0m");
+           ("Consumer [" & ProducerTask.Producer_Id'Img & "] adds item");  -- Print a message indicating item addition.
 
-         Access_Storage.Release;
-         Empty_Storage.Release;
+         Access_Storage.Release;  -- Release the access semaphore.
+         Empty_Storage.Release;  -- Release the empty storage semaphore.
       end loop;
       Put_Line
-        (Ada.Characters.Latin_1.ESC & "[31m" & "Supplier #" & Supplier_Id'Img &
-         " finished working" & Ada.Characters.Latin_1.ESC & "[0m");
-   end SupplierTask;
+        ("Consumer [" & ProducerTask.Producer_Id'Img & "] stopped");  -- Print a message indicating producer stop.
+   end ProducerTask;
 
-   task type ReceiverTask is
-      entry Start (Num : Integer);
-   end ReceiverTask;
+   task type ConsumerTask is  -- Define a task type for consumers.
+      entry Start (Num : Integer);  -- Entry to start a consumer task.
+   end ConsumerTask;
 
-   task body ReceiverTask is
-      Receiver_Id : Integer;
+   task body ConsumerTask is  -- Body of the consumer task.
+      Consumer_Id : Integer;  -- ID of the consumer.
    begin
-      accept Start (Num : Integer) do
-         Receiver_Id := Num;
+      accept Start (Num : Integer) do  -- Accept the start entry with a consumer ID.
+         ConsumerTask.Consumer_Id := Num;  -- Set the consumer ID.
       end Start;
-      while not ItemsHandler.IsConsumptionDone loop
-         ItemsHandler.DecrementConsumed;
-         Empty_Storage.Seize;
-         Access_Storage.Seize;
+      while not ItemsHandler.IsConsumptionDone loop  -- Continue consuming until all items are consumed.
+         ItemsHandler.ConsumeCount;  -- Decrement the counter for consumed items.
+         Empty_Storage.Seize;  -- Acquire an empty storage semaphore.
+         Access_Storage.Seize;  -- Acquire an access semaphore for storage.
 
          declare
-            Item : String := First_Element (Storage);
+            Item : String := First_Element (Storage);  -- Get the first item from the storage.
          begin
             Put_Line
-              (Ada.Characters.Latin_1.ESC & "[36m" & "Receiver #" & Receiver_Id'Img &
-               " took " & Item & Ada.Characters.Latin_1.ESC & "[0m");
-            Storage.Delete_First;
+              ("Receiver [" & ConsumerTask.Consumer_Id'Img & "] get ");  -- Print a message indicating item consumption.
+            Storage.Delete_First;  -- Delete the first item from the storage.
 
-            Access_Storage.Release;
-            Full_Storage.Release;
+            Access_Storage.Release;  -- Release the access semaphore.
+            Full_Storage.Release;  -- Release the full storage semaphore.
          end;
       end loop;
       Put_Line
-        (Ada.Characters.Latin_1.ESC & "[35m" & "Receiver #" & Receiver_Id'Img &
-         " finished working" & Ada.Characters.Latin_1.ESC & "[0m");
-   end ReceiverTask;
+        ("Receiver [" & ConsumerTask.Consumer_Id'Img & "] stopped");  -- Print a message indicating consumer stop.
+   end ConsumerTask;
 
-   type SupplierArray is array (Integer range <>) of SupplierTask;
-   type ReceiverArray is array (Integer range <>) of ReceiverTask;
+   type ProducerArray is array (Integer range <>) of ProducerTask;  -- Define an array type for producer tasks.
+   type ConsumerArray is array (Integer range <>) of ConsumerTask;  -- Define an array type for consumer tasks.
 
 begin
    declare
-      Suppliers : SupplierArray (1 .. Num_Suppliers);
-      Receivers : ReceiverArray (1 .. Num_Receivers);
+      Producers : ProducerArray (1 .. Num_Producers);  -- Declare an array of producer tasks.
+      Consumers : ConsumerArray (1 .. Num_Consumers);  -- Declare an array of consumer tasks.
    begin
-      ItemsHandler.SetProduction (Total => Total_Items);
-      for I in 1 .. Num_Receivers loop
-         Receivers (I).Start (I);
+      ItemsHandler.SetProduction (Total => Total_Items);  -- Set the total production count.
+      for I in 1 .. Num_Consumers loop  -- Loop through each consumer.
+         Consumers (I).Start (I);  -- Start the consumer task.
       end loop;
 
-      for I in 1 .. Num_Suppliers loop
-         Suppliers (I).Start (I);
+      for I in 1 .. Num_Producers loop  -- Loop through each producer.
+         Producers (I).Start (I);  -- Start the producer task.
       end loop;
    end;
-end Main;
+end Main;  -- End of the main procedure.
