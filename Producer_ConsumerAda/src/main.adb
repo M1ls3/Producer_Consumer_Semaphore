@@ -5,7 +5,7 @@ with Ada.Numerics.Discrete_Random;  -- Import Ada.Numerics.Discrete_Random packa
 
 pragma Wide_Character_Encoding (Utf8);  -- Set wide character encoding to UTF-8.
 
-procedure Main is  -- Start of the main procedure.
+procedure Main is  -- Start of the main.
    package String_Lists is new Indefinite_Doubly_Linked_Lists (String);  -- Define a new package String_Lists based on Indefinite_Doubly_Linked_Lists for strings.
    use String_Lists;  -- Make the contents of String_Lists directly visible.
 
@@ -56,8 +56,8 @@ procedure Main is  -- Start of the main procedure.
    end ItemsHandler;
 
    Storage_Size  : Integer := 3;  -- Define the size of the storage.
-   Num_Producers : Integer := 1;  -- Define the number of producers.
-   Num_Consumers : Integer := 4;  -- Define the number of consumers.
+   Num_Producers : Integer := 3;  -- Define the number of producers.
+   Num_Consumers : Integer := 3;  -- Define the number of consumers.
    Total_Items   : Integer := 10;  -- Define the total number of items.
 
    Storage        : List;  -- Define a list to store items.
@@ -116,7 +116,7 @@ procedure Main is  -- Start of the main procedure.
             Item : String := First_Element (Storage);  -- Get the first item from the storage.
          begin
             Put_Line
-              ("Receiver [" & ConsumerTask.Consumer_Id'Img & "] get ");  -- Print a message indicating item consumption.
+              ("Receiver [" & ConsumerTask.Consumer_Id'Img & "] get ");
             Storage.Delete_First;  -- Delete the first item from the storage.
 
             Access_Storage.Release;  -- Release the access semaphore.
@@ -124,7 +124,7 @@ procedure Main is  -- Start of the main procedure.
          end;
       end loop;
       Put_Line
-        ("Receiver [" & ConsumerTask.Consumer_Id'Img & "] stopped");  -- Print a message indicating consumer stop.
+        ("Receiver [" & ConsumerTask.Consumer_Id'Img & "] stopped");
    end ConsumerTask;
 
    type ProducerArray is array (Integer range <>) of ProducerTask;  -- Define an array type for producer tasks.
@@ -144,4 +144,4 @@ begin
          Producers (I).Start (I);  -- Start the producer task.
       end loop;
    end;
-end Main;  -- End of the main procedure.
+end Main;  -- End of the main.
