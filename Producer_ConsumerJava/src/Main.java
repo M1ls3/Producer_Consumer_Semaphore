@@ -4,8 +4,9 @@ import java.util.concurrent.Semaphore;
 
 public class Main {
     public static void main(String[] args) {
-        int producerAmount = 1;
-        int consumerAmount = 1;
+        int producerAmount = 2;
+        int consumerAmount = 3;
+        Production.maxProduced = producerAmount * 10;
         Semaphore full = new Semaphore(0);
         Semaphore empty = new Semaphore(10);
         Semaphore access = new Semaphore(1);

@@ -24,7 +24,7 @@ public void run() {
 
             storage.push(Production.work());
             System.out.println("Producer [" + producerIndex + "] produced " + storage.peek());
-
+            Production.produced++;
             access.release(); // Release access to the storage
             full.release(); // Signal that an item has been produced
         }

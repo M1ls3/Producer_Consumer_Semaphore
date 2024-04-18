@@ -7,9 +7,17 @@ namespace Producer_ConsumerCS
     public class Production
     {
         public static Random rand = new Random();
+        public static bool isDone = false;
+        public static int maxProduced = 0;
+        public static int produced = 0;
         public static string Work()
         {
             return $"item [{rand.Next(0,101)}]";
+        }
+        public static bool Check()
+        {
+            isDone = maxProduced <= produced;
+            return isDone;
         }
     }
 
@@ -35,6 +43,7 @@ namespace Producer_ConsumerCS
 
             storage.Push(Production.Work());
             Console.WriteLine($"Producer [{producerIndex}] produced {storage.First()}");
+            Production.produced++;
 
             access.Release(); // Release access to the storage
             full.Release(); // Signal that an item has been produced
@@ -58,15 +67,21 @@ namespace Producer_ConsumerCS
 
         public void Consume(int consumerIndex)
         {
-            full.WaitOne(); // Wait until there's an item in the storage
-            access.WaitOne(); // Acquire access to the storage
+            if (!Production.isDone)
+            {
+                full.WaitOne(); // Wait until there's an item in the storage
+                access.WaitOne(); // Acquire access to the storage
 
-            string item = storage.Pop();
-            //storage.Pop();
-            Console.WriteLine($"Consumer [{consumerIndex}] take {item}");
+                string item = storage.Pop();
+                //storage.Pop();
+                Console.WriteLine($"Consumer [{consumerIndex}] take {item}");
 
-            access.Release(); // Release access to the storage
-            empty.Release(); // Signal that an item has been consumed
+                access.Release(); // Release access to the storage
+                empty.Release(); // Signal that an item has been consumed
+
+                Production.Check();
+            }
+            else { return; }
         }
     }
 
@@ -75,7 +90,8 @@ namespace Producer_ConsumerCS
         static void Main(string[] args)
         {
             int producerAmount = 2;
-            int consumerAmount = 2;
+            int consumerAmount = 3;
+            Production.maxProduced = producerAmount * 10;
             Semaphore full = new Semaphore(0, 10); // Semaphore to track the number of full slots in the storage
             Semaphore empty = new Semaphore(10, 10); // Semaphore to track the number of empty slots in the storage
             Semaphore access = new Semaphore(1, 1); // Semaphore for controlling access to the storage
